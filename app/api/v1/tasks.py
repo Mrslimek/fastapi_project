@@ -14,6 +14,7 @@ from depends.tasks import (
     create_model_and_commit,
     update_model_and_commit,
     partial_update_and_commit,
+    destroy_and_commit
 )
 
 
@@ -106,3 +107,22 @@ async def partial_update_task(
             raise HTTPException(status_code=400, detail="Некорректный запрос")
 
     return result
+
+
+@router.delete("/{task_id}", summary="Метод DELETE")
+async def destroy_task(task_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Удаление записи модели Task
+    """
+    result = await destroy_and_commit(model=Task, model_id=task_id, db=db)
+    match result:
+        case None:
+            raise HTTPException(status_code=404, detail="По вашесу запросу ничего не найдено")
+        case "IntegrityError":
+            raise HTTPException(status_code=400, detail="Ошибка целостности данных")
+        case "TypeError":
+            raise HTTPException(status_code=400, detail="Неверный формат данных")
+        case "InvalidRequestError":
+            raise HTTPException(status_code=400, detail="Некорректный запрос")
+        case "success":
+            return {"status": "success"}

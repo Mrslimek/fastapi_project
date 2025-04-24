@@ -7,7 +7,7 @@ from config import settings
 DATABASE_URL = f"postgresql+asyncpg://{settings.PG_USER}:{settings.PG_PASSWORD}@{settings.PG_HOST}/{settings.PG_NAME}"
 # Созданной асинхронный движок для работы с psql
 # Движок управляет соединением с бд, запросами в бд и управляет транзакциями
-engine = create_async_engine(DATABASE_URL)
+engine = create_async_engine(DATABASE_URL, echo=True)
 # sessionmaker - фабрика, которая создает экземпяляры сессий
 # expire_on_commit = False означает, что сессия не будет истекать после коммита
 # TODO: Возможно, expire_on_commit стоит убрать,

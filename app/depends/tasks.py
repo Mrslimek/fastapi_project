@@ -97,3 +97,28 @@ async def partial_update_and_commit(
         except InvalidRequestError:
             return "InvalidRequestError"
     return model_obj
+
+
+async def destroy_and_commit(model: type[Base], model_id: int, db: AsyncSession):
+    """
+    Удаление записи переданной модели
+    """
+    async with db.begin():
+        model_obj = await db.get(model, model_id)
+        if model_obj is None:
+            return None
+        try:
+            # Здесь используется await потому, что delete у AsyncSession
+            # реализован через async def, но
+            # он вызывает синхронную функцию delete у greenlet
+            # Асинхронность тут нужна для того, чтобы, в случае существования каких-то связей,
+            # и, соответственно, необходимости добавить каскадные удаления этих связей,
+            # то есть, сделать запрос в бд, то есть i/o операцию, не блокировать поток
+            await db.delete(model_obj)
+        except IntegrityError:
+            return "IntegrityError"
+        except TypeError:
+            return "TypeError"
+        except InvalidRequestError:
+            return "InvalidRequestError"
+    return "success"
