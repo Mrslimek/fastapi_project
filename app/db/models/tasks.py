@@ -1,11 +1,7 @@
-from sqlalchemy import Integer, String, Enum as SQLEnum
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import Integer, String, Enum as SQLEnum, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from utils.enums import CompletionStatus
-
-
-class Base(DeclarativeBase):
-    # Здесь можно будет описать метаданные моделей
-    pass
+from db.database import Base
 
 
 def get_enum_values(enum_class):
@@ -18,7 +14,6 @@ class Task(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
-    # TODO: Разобраться с тем, как правильно преобразовать enum в sqlalchemy enum
     completion_status: Mapped[CompletionStatus] = mapped_column(
         SQLEnum(
             CompletionStatus, name="completion_status", values_callable=get_enum_values
@@ -26,3 +21,6 @@ class Task(Base):
         default=CompletionStatus.NOT_COMPLETED,
         nullable=False,
     )
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+
+    user = relationship("User", back_populates="tasks")

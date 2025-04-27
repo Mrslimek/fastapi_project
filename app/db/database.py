@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from config import settings
+
 
 
 # Такая строка называется DSN
@@ -13,6 +14,11 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 # TODO: Возможно, expire_on_commit стоит убрать,
 # потому что, предположительно, у меня нет логики, при которой эта сессия нужна после коммита
 SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+
+
+class Base(DeclarativeBase):
+    # Здесь можно будет описать метаданные моделей
+    pass
 
 
 # Получаем экземпляр сессии по требованию
