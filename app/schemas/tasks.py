@@ -1,4 +1,4 @@
-from pydantic import BaseModel, RootModel, validator, constr, Field
+from pydantic import BaseModel, RootModel, Field, constr
 from typing import Optional, Annotated
 from utils.enums import CompletionStatus
 
@@ -45,6 +45,7 @@ class TaskCreateUpdate(BaseModel):
     title: TitleType
     description: Optional[DescriptionType] = None
     completion_status: Optional[CompletionStatus] = CompletionStatus.NOT_COMPLETED
+    user_id: int
 
 
 class TaskPartialUpdate(BaseModel):

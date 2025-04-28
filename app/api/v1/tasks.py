@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.database import get_db
 from db.models.tasks import Task
-from schemas.tasks.tasks import (
+from schemas.tasks import (
     TaskCreateUpdate,
     TaskPartialUpdate,
     TaskResponse,
@@ -48,7 +48,7 @@ async def retrieve_tasks(task_id: int, db: AsyncSession = Depends(get_db)):
     return result
 
 
-@router.post("", summary="Метод POST", response_model=TaskResponse)
+@router.post("", summary="Метод POST", status_code=201, response_model=TaskResponse)
 async def create_task(task_data: TaskCreateUpdate, db: AsyncSession = Depends(get_db)):
     """
     Создание новой записи модели Task

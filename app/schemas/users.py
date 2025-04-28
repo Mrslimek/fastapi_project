@@ -9,4 +9,3 @@ class UserLogin(BaseModel):
 class UserRegister(BaseModel):
     first_name: str
     password: str
-    confirm_password: str

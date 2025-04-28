@@ -11,7 +11,7 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     first_name: Mapped[str] = mapped_column(String(25), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
