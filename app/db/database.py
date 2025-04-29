@@ -3,7 +3,6 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from config import settings
 
 
-
 # Такая строка называется DSN
 DATABASE_URL = f"postgresql+asyncpg://{settings.PG_USER}:{settings.PG_PASSWORD}@{settings.PG_HOST}/{settings.PG_NAME}"
 # Созданной асинхронный движок для работы с psql
@@ -13,7 +12,7 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 # expire_on_commit = False означает, что сессия не будет истекать после коммита
 # TODO: Возможно, expire_on_commit стоит убрать,
 # потому что, предположительно, у меня нет логики, при которой эта сессия нужна после коммита
-SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=True)
 
 
 class Base(DeclarativeBase):

@@ -25,6 +25,7 @@ class TaskResponse(BaseModel):
     """
     Схема для ответа модели Task
     """
+
     id: int
     title: str
     description: Optional[str]
@@ -35,6 +36,7 @@ class TaskResponseList(RootModel):
     """
     Рут схема для списка схем TaskResponse
     """
+
     root: list[TaskResponse]
 
 
@@ -42,6 +44,7 @@ class TaskCreateUpdate(BaseModel):
     """
     Схема для создания и обновления модели Task
     """
+
     title: TitleType
     description: Optional[DescriptionType] = None
     completion_status: Optional[CompletionStatus] = CompletionStatus.NOT_COMPLETED
@@ -52,6 +55,7 @@ class TaskPartialUpdate(BaseModel):
     """
     Схема для частичного обновления модели Task
     """
+
     title: Optional[TitleType] = None
     description: Optional[DescriptionType] = None
     completion_status: Optional[CompletionStatus] = CompletionStatus.NOT_COMPLETED

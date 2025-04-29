@@ -37,17 +37,12 @@ async def create_model_and_commit(
     Создание Объекта модели model и коммит в бд.
     """
     model_data = model_data.model_dump()
+    new_model = model(**model_data)
     try:
-        new_model = model(**model_data)
-        async with db.begin():
-            db.add(new_model)
-        return new_model
-    except IntegrityError:
-        return None
-    except TypeError:
-        return None
-    except InvalidRequestError:
-        return None
+        db.add(new_model)
+    except Exception:
+        db.rollback()
+    return new_model
 
 
 async def update_model_and_commit(

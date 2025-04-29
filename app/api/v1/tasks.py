@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from db.models.tasks import Task, Base
 from db.database import get_db
-from db.models.tasks import Task
+from utils.auth import verify_token
+from utils.etc import handle_db_result
 from schemas.tasks import (
     TaskCreateUpdate,
     TaskPartialUpdate,
@@ -14,7 +16,7 @@ from depends.tasks import (
     create_model_and_commit,
     update_model_and_commit,
     partial_update_and_commit,
-    destroy_and_commit
+    destroy_and_commit,
 )
 
 
@@ -22,7 +24,9 @@ router = APIRouter(prefix="/tasks")
 
 
 @router.get("", summary="Метод GET/list", response_model=TaskResponseList)
-async def list_tasks(db: AsyncSession = Depends(get_db)):
+async def list_tasks(
+    db: AsyncSession = Depends(get_db), user: Base = Depends(verify_token)
+):
     """
     Получение всех записей модели Task
     """
@@ -36,7 +40,9 @@ async def list_tasks(db: AsyncSession = Depends(get_db)):
 
 # TODO: Посмотреть, может быть здесь будет эффективнее использовать синхронные запросы и как это сделать
 @router.get("/{task_id}", summary="Метод GET/retrieve", response_model=TaskResponse)
-async def retrieve_tasks(task_id: int, db: AsyncSession = Depends(get_db)):
+async def retrieve_tasks(
+    task_id: int, db: AsyncSession = Depends(get_db), user: Base = Depends(verify_token)
+):
     """
     Получение записи модели Task по id
     """
@@ -47,9 +53,14 @@ async def retrieve_tasks(task_id: int, db: AsyncSession = Depends(get_db)):
         )
     return result
 
-
-@router.post("", summary="Метод POST", status_code=201, response_model=TaskResponse)
-async def create_task(task_data: TaskCreateUpdate, db: AsyncSession = Depends(get_db)):
+# TODO: Сюда надо вставить response_model=TaskResponse, но для этого надо
+# возвращать модель с id
+@router.post("", summary="Метод POST", status_code=201)
+async def create_task(
+    task_data: TaskCreateUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: Base = Depends(verify_token),
+):
     """
     Создание новой записи модели Task
     """
@@ -61,7 +72,10 @@ async def create_task(task_data: TaskCreateUpdate, db: AsyncSession = Depends(ge
 
 @router.put("/{task_id}", summary="Метод PUT", response_model=TaskResponse)
 async def update_task(
-    task_id: int, new_data: TaskCreateUpdate, db: AsyncSession = Depends(get_db)
+    task_id: int,
+    new_data: TaskCreateUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: Base = Depends(verify_token),
 ):
     """
     Полное обновление записи модели Task
@@ -69,24 +83,16 @@ async def update_task(
     result = await update_model_and_commit(
         model=Task, model_id=task_id, new_data=new_data, db=db
     )
-    match result:
-        case None:
-            raise HTTPException(
-                status_code=404, detail="По вашему запросу ничего не найдено"
-            )
-        case "IntegrityError":
-            raise HTTPException(status_code=400, detail="Ошибка целостности данных")
-        case "TypeError":
-            raise HTTPException(status_code=400, detail="Неверный формат данных")
-        case "InvalidRequestError":
-            raise HTTPException(status_code=400, detail="Некорректный запрос")
-
+    handle_db_result(result)
     return result
 
 
 @router.patch("/{task_id}", summary="Метод PATCH", response_model=TaskResponse)
 async def partial_update_task(
-    task_id: int, new_data: TaskPartialUpdate, db: AsyncSession = Depends(get_db)
+    task_id: int,
+    new_data: TaskPartialUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: Base = Depends(verify_token),
 ):
     """
     Частичное обновление записи модели Task
@@ -94,35 +100,17 @@ async def partial_update_task(
     result = await partial_update_and_commit(
         model=Task, model_id=task_id, new_data=new_data, db=db
     )
-    match result:
-        case None:
-            raise HTTPException(
-                status_code=404, detail="По вашему запросу ничего не найдено"
-            )
-        case "IntegrityError":
-            raise HTTPException(status_code=400, detail="Ошибка целостности данных")
-        case "TypeError":
-            raise HTTPException(status_code=400, detail="Неверный формат данных")
-        case "InvalidRequestError":
-            raise HTTPException(status_code=400, detail="Некорректный запрос")
-
+    handle_db_result(result)
     return result
 
 
 @router.delete("/{task_id}", summary="Метод DELETE")
-async def destroy_task(task_id: int, db: AsyncSession = Depends(get_db)):
+async def destroy_task(
+    task_id: int, db: AsyncSession = Depends(get_db), user: Base = Depends(verify_token)
+):
     """
     Удаление записи модели Task
     """
     result = await destroy_and_commit(model=Task, model_id=task_id, db=db)
-    match result:
-        case None:
-            raise HTTPException(status_code=404, detail="По вашесу запросу ничего не найдено")
-        case "IntegrityError":
-            raise HTTPException(status_code=400, detail="Ошибка целостности данных")
-        case "TypeError":
-            raise HTTPException(status_code=400, detail="Неверный формат данных")
-        case "InvalidRequestError":
-            raise HTTPException(status_code=400, detail="Некорректный запрос")
-        case "success":
-            return {"status": "success"}
+    handle_db_result(result)
+    return {"status": "success"}
