@@ -30,6 +30,7 @@ class TaskResponse(BaseModel):
     title: str
     description: Optional[str]
     completion_status: str
+    user_id: int
 
 
 class TaskResponseList(RootModel):
@@ -48,7 +49,9 @@ class TaskCreateUpdate(BaseModel):
     title: TitleType
     description: Optional[DescriptionType] = None
     completion_status: Optional[CompletionStatus] = CompletionStatus.NOT_COMPLETED
-    user_id: int
+    
+    class Config:
+        extra = "forbid"
 
 
 class TaskPartialUpdate(BaseModel):
@@ -59,3 +62,6 @@ class TaskPartialUpdate(BaseModel):
     title: Optional[TitleType] = None
     description: Optional[DescriptionType] = None
     completion_status: Optional[CompletionStatus] = CompletionStatus.NOT_COMPLETED
+    
+    class Config:
+        extra = "forbid"

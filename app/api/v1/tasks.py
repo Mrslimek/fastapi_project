@@ -30,7 +30,7 @@ async def list_tasks(
     """
     Получение всех записей модели Task
     """
-    result = await list_model_data(model=Task, db=db)
+    result = await list_model_data(model=Task, user=user, db=db)
     if not result:
         raise HTTPException(
             status_code=404, detail="По вашему запросу ничего не найдено"
@@ -53,9 +53,10 @@ async def retrieve_tasks(
         )
     return result
 
+
 # TODO: Сюда надо вставить response_model=TaskResponse, но для этого надо
 # возвращать модель с id
-@router.post("", summary="Метод POST", status_code=201)
+@router.post("", summary="Метод POST", status_code=201, response_model=TaskResponse)
 async def create_task(
     task_data: TaskCreateUpdate,
     db: AsyncSession = Depends(get_db),
@@ -64,7 +65,7 @@ async def create_task(
     """
     Создание новой записи модели Task
     """
-    result = await create_model_and_commit(model=Task, model_data=task_data, db=db)
+    result = await create_model_and_commit(model=Task, model_data=task_data, user=user, db=db)
     if result is None:
         raise HTTPException(status_code=400, detail="Некорректные данные")
     return result
@@ -78,10 +79,12 @@ async def update_task(
     user: Base = Depends(verify_token),
 ):
     """
-    Полное обновление записи модели Task
+    Полное обновление записи модели Task.
+    По сути этот метод не нужен в рамках этого приложения,
+    Но реализован в учебных целях
     """
     result = await update_model_and_commit(
-        model=Task, model_id=task_id, new_data=new_data, db=db
+        model=Task, model_id=task_id, new_data=new_data, user=user, db=db
     )
     handle_db_result(result)
     return result

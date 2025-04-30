@@ -1,26 +1,24 @@
+from sqlalchemy import select
 from db.models.tasks import Base
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from schemas.tasks import TaskCreateUpdate, TaskPartialUpdate
 
 
-async def list_model_data(model: type[Base], db: AsyncSession) -> list[Base] | None:
+async def list_model_data(model: type[Base], user: Base, db: AsyncSession) -> list[Base] | None:
     """
     Получение всех записей модели model из бд.
     Если select(model) ничего не вернет, то вернет пустой список.
     Эта ситуация обрабатывается, чтобы вернуть None для простой обработки ошибок.
     """
-    tasks = await db.scalars(select(model))
+    tasks = await db.scalars(select(model).where(model.user_id == user.id))
     result = tasks.all()
     if not result:
         return None
     return result
 
 
-async def retrieve_model_data(
-    model_id: int, model: type[Base], db: AsyncSession
-) -> Base | None:
+async def retrieve_model_data(model_id: int, model: type[Base], db: AsyncSession) -> Base | None:
     """
     Получение конкретной записи модели model из бд
     по id.
@@ -31,22 +29,28 @@ async def retrieve_model_data(
 
 
 async def create_model_and_commit(
-    model: type[Base], model_data: TaskCreateUpdate, db: AsyncSession
+    model: type[Base], model_data: TaskCreateUpdate, user: Base, db: AsyncSession
 ) -> Base | None:
     """
     Создание Объекта модели model и коммит в бд.
     """
     model_data = model_data.model_dump()
     new_model = model(**model_data)
+    new_model.user_id = user.id
     try:
-        db.add(new_model)
-    except Exception:
-        db.rollback()
+        async with db.begin():
+            db.add(new_model)
+    except IntegrityError:
+        return "IntegrityError"
+    except TypeError:
+        return "TypeError"
+    except InvalidRequestError:
+        return "InvalidRequestError"
     return new_model
 
 
 async def update_model_and_commit(
-    model: type[Base], model_id: int, new_data: TaskCreateUpdate, db: AsyncSession
+    model: type[Base], model_id: int, new_data: TaskCreateUpdate, user: Base, db: AsyncSession
 ) -> Base | None:
     """
     Полное обновление объекта модели model и коммит в бд.
@@ -57,6 +61,9 @@ async def update_model_and_commit(
             model_obj = await db.get(model, model_id)
             if model_obj is None:
                 return None
+            # Главное не забывать, что если проходимся циклом,
+            # то нужно обязательно заблокировать возможность передавать поля,
+            # которые мы не хотим присваивать
             for key, value in new_data.items():
                 setattr(model_obj, key, value)
             db.add(model_obj)

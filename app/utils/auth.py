@@ -38,7 +38,8 @@ async def verify_token(
         raise credentials_exception
     except jwt.ExpiredSignatureError:
         raise credentials_exception
-    stmt = select(User).where(User.username == username)
-    result = await db.execute(stmt)
-    user = result.scalars().first()
+    async with db.begin():
+        stmt = select(User).where(User.username == username)
+        result = await db.execute(stmt)
+        user = result.scalars().first()
     return user
