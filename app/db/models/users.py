@@ -1,7 +1,7 @@
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import Integer, String
 from passlib.context import CryptContext
-from db.database import Base
+from app.db.database import Base
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -1,8 +1,8 @@
-from sqlalchemy import select
-from db.models.tasks import Base
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
-from schemas.tasks import TaskCreateUpdate, TaskPartialUpdate
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.schemas.tasks import TaskCreateUpdate, TaskPartialUpdate
+from app.db.models.tasks import Base
 
 
 async def list_model_data(model: type[Base], user: Base, db: AsyncSession) -> list[Base] | None:

@@ -1,16 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from db.models.tasks import Task, Base
-from db.database import get_db
-from utils.auth import verify_token
-from utils.etc import handle_db_result
-from schemas.tasks import (
+from app.db.models.tasks import Task, Base
+from app.db.database import get_db
+from app.utils.auth import verify_token
+from app.utils.etc import handle_db_result
+from app.schemas.tasks import (
     TaskCreateUpdate,
     TaskPartialUpdate,
     TaskResponse,
     TaskResponseList,
 )
-from depends.tasks import (
+from app.depends.tasks import (
     list_model_data,
     retrieve_model_data,
     create_model_and_commit,
@@ -38,7 +38,6 @@ async def list_tasks(
     return result
 
 
-# TODO: Посмотреть, может быть здесь будет эффективнее использовать синхронные запросы и как это сделать
 @router.get("/{task_id}", summary="Метод GET/retrieve", response_model=TaskResponse)
 async def retrieve_tasks(
     task_id: int, db: AsyncSession = Depends(get_db), user: Base = Depends(verify_token)
@@ -54,8 +53,6 @@ async def retrieve_tasks(
     return result
 
 
-# TODO: Сюда надо вставить response_model=TaskResponse, но для этого надо
-# возвращать модель с id
 @router.post("", summary="Метод POST", status_code=201, response_model=TaskResponse)
 async def create_task(
     task_data: TaskCreateUpdate,

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, RootModel, Field, constr
 from typing import Optional, Annotated
-from utils.enums import CompletionStatus
+from app.utils.enums import CompletionStatus
 
 # Аннотации
 NonEmptyString = constr(strip_whitespace=True, min_length=1)

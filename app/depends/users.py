@@ -1,10 +1,10 @@
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from schemas.users import UserRegister
-from db.models.users import User
-from utils.auth import create_access_token
-from schemas.auth import Token
+from app.schemas.users import UserRegister
+from app.schemas.auth import Token
+from app.utils.auth import create_access_token
+from app.db.models.users import User
 
 
 async def register_user(user_data: UserRegister, db: AsyncSession):

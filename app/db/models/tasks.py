@@ -1,7 +1,7 @@
 from sqlalchemy import Integer, String, Enum as SQLEnum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from utils.enums import CompletionStatus
-from db.database import Base
+from app.utils.enums import CompletionStatus
+from app.db.database import Base
 
 
 def get_enum_values(enum_class):
