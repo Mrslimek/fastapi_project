@@ -48,8 +48,10 @@ class TaskCreateUpdate(BaseModel):
 
     title: TitleType
     description: Optional[DescriptionType] = None
-    completion_status: Optional[CompletionStatus] = CompletionStatus.NOT_COMPLETED
-    
+    completion_status: Optional[CompletionStatus] = (
+        CompletionStatus.NOT_COMPLETED
+    )
+
     class Config:
         extra = "forbid"
 
@@ -61,7 +63,9 @@ class TaskPartialUpdate(BaseModel):
 
     title: Optional[TitleType] = None
     description: Optional[DescriptionType] = None
-    completion_status: Optional[CompletionStatus] = CompletionStatus.NOT_COMPLETED
-    
+    completion_status: Optional[CompletionStatus] = (
+        CompletionStatus.NOT_COMPLETED
+    )
+
     class Config:
         extra = "forbid"

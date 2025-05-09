@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from main import app
-from asyncio import sleep 
+from asyncio import sleep
 
 
 # TODO: срабатавыет только первый тест, потом все тесты проваливаются
@@ -61,10 +61,12 @@ async def async_client():
         ({"title": "Valid", "description": "Another valid description"}, 200),
         ({"title": "T" * 25, "description": "D" * 255, "done": None}, 200),
         ({"title": None, "description": None, "done": None}, 200),
-        ({"title": None, "description": "Valid description", "done": True}, 200),
+        (
+            {"title": None, "description": "Valid description", "done": True},
+            200,
+        ),
         ({"title": "Valid Title", "description": None, "done": False}, 200),
         ({}, 200),
-
         # ❌ Одна часть валидная, другая - некорректная
         ({"title": "Updated task", "description": ""}, 400),
         ({"title": "", "description": "Updated description"}, 400),
@@ -74,24 +76,43 @@ async def async_client():
         ({"title": 1, "description": "Updated description"}, 400),
         ({"title": "Updated task", "description": True}, 400),
         ({"title": True, "description": "Updated description"}, 400),
-
         # ❌ Оба поля некорректные
         ({"title": "", "description": ""}, 400),
         ({"title": " ", "description": " "}, 400),
         ({"title": 1, "description": 1}, 400),
         ({"title": True, "description": False}, 400),
         ({"title": {}, "description": []}, 400),
-
         # ❌ Неверные типы (не строка)
         ({"title": {}, "description": "Valid description"}, 400),
         ({"title": [], "description": "Valid description"}, 400),
         ({"title": "Valid Title", "description": {}, "done": False}, 400),
         ({"title": "Valid Title", "description": [], "done": False}, 400),
         ({"title": "Valid Title", "description": 123, "done": True}, 400),
-        ({"title": "Valid Title", "description": "Valid description", "done": "Yes"}, 400),
-        ({"title": "Valid Title", "description": "Valid description", "done": 5}, 400),
-        ({"title": "Valid Title", "description": "Valid description", "done": []}, 400),
-    ]
+        (
+            {
+                "title": "Valid Title",
+                "description": "Valid description",
+                "done": "Yes",
+            },
+            400,
+        ),
+        (
+            {
+                "title": "Valid Title",
+                "description": "Valid description",
+                "done": 5,
+            },
+            400,
+        ),
+        (
+            {
+                "title": "Valid Title",
+                "description": "Valid description",
+                "done": [],
+            },
+            400,
+        ),
+    ],
 )
 async def test_partial_update_task(async_client, json_data, expected_status):
     """

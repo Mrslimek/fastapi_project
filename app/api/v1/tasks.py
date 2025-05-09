@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models.tasks import Task, Base
 from app.db.database import get_db
 from app.utils.auth import verify_token
-from app.utils.etc import handle_db_result
+from app.utils.etc import handle_db_result, create_model_instance
 from app.schemas.tasks import (
     TaskCreateUpdate,
     TaskPartialUpdate,
@@ -30,7 +30,7 @@ async def list_tasks(
     """
     Получение всех записей модели Task
     """
-    result = await list_model_data(model=Task, user=user, db=db)
+    result = await list_model_data(model_class=Task, user=user, db=db)
     if not result:
         raise HTTPException(
             status_code=404, detail="По вашему запросу ничего не найдено"
@@ -38,14 +38,18 @@ async def list_tasks(
     return result
 
 
-@router.get("/{task_id}", summary="Метод GET/retrieve", response_model=TaskResponse)
+@router.get(
+    "/{task_id}", summary="Метод GET/retrieve", response_model=TaskResponse
+)
 async def retrieve_tasks(
-    task_id: int, db: AsyncSession = Depends(get_db), user: Base = Depends(verify_token)
+    task_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: Base = Depends(verify_token),
 ):
     """
     Получение записи модели Task по id
     """
-    result = await retrieve_model_data(model_id=task_id, model=Task, db=db)
+    result = await retrieve_model_data(model_obj_id=task_id, model_class=Task, db=db)
     if result is None:
         raise HTTPException(
             status_code=404, detail="По вашему запросу ничего не найдено"
@@ -53,7 +57,9 @@ async def retrieve_tasks(
     return result
 
 
-@router.post("", summary="Метод POST", status_code=201, response_model=TaskResponse)
+@router.post(
+    "", summary="Метод POST", status_code=201, response_model=TaskResponse
+)
 async def create_task(
     task_data: TaskCreateUpdate,
     db: AsyncSession = Depends(get_db),
@@ -62,7 +68,10 @@ async def create_task(
     """
     Создание новой записи модели Task
     """
-    result = await create_model_and_commit(model=Task, model_data=task_data, user=user, db=db)
+    model_obj = create_model_instance(
+        model_class=Task, model_data=task_data.model_dump(), user_id=user.id
+    )
+    result = await create_model_and_commit(model_obj=model_obj, db=db)
     if result is None:
         raise HTTPException(status_code=400, detail="Некорректные данные")
     return result
@@ -81,7 +90,11 @@ async def update_task(
     Но реализован в учебных целях
     """
     result = await update_model_and_commit(
-        model=Task, model_id=task_id, new_data=new_data, user=user, db=db
+        model_class=Task,
+        model__obj_id=task_id,
+        new_data=new_data.model_dump(),
+        user=user,
+        db=db,
     )
     handle_db_result(result)
     return result
@@ -98,7 +111,10 @@ async def partial_update_task(
     Частичное обновление записи модели Task
     """
     result = await partial_update_and_commit(
-        model=Task, model_id=task_id, new_data=new_data, db=db
+        model_class=Task,
+        model_obj_id=task_id,
+        new_data=new_data.model_dump(),
+        db=db,
     )
     handle_db_result(result)
     return result
@@ -106,11 +122,15 @@ async def partial_update_task(
 
 @router.delete("/{task_id}", summary="Метод DELETE")
 async def destroy_task(
-    task_id: int, db: AsyncSession = Depends(get_db), user: Base = Depends(verify_token)
+    task_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: Base = Depends(verify_token),
 ):
     """
     Удаление записи модели Task
     """
-    result = await destroy_and_commit(model=Task, model_id=task_id, db=db)
+    result = await destroy_and_commit(
+        model_class=Task, model_obj_id=task_id, db=db
+    )
     handle_db_result(result)
     return {"status": "success"}

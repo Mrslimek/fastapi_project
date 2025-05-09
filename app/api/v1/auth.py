@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Annotated
 from app.db.database import get_db
 from app.depends.users import login_user
 from app.schemas.auth import Token
@@ -12,7 +11,7 @@ router = APIRouter()
 
 @router.post("/token")
 async def token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ) -> Token:
     result = await login_user(user_data=form_data, db=db)

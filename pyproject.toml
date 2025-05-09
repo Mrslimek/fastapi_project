@@ -20,3 +20,18 @@ dependencies = [
     "ruff>=0.11.7",
     "sqlalchemy>=2.0.40",
 ]
+
+[tool.ruff]
+line-length = 79  # Максимальная длина строки по PEP8
+indent-width = 4  # Использование пробелов для отступов
+target-version = "py312"  # Укажи версию Python, если нужно
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]  # Pycodestyle (E), Pyflakes (F), предупреждения (W)
+ignore = ["E501"]  # Отключаем ограничение длины строки, если используешь Black
+
+[tool.ruff.format]
+quote-style = "double"  # PEP8 рекомендует двойные кавычки для строк
+indent-style = "space"  # Пробелы вместо табуляции
+skip-magic-trailing-comma = false  # Форматирование списков по PEP8
+

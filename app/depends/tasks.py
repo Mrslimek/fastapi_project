@@ -1,64 +1,67 @@
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.schemas.tasks import TaskCreateUpdate, TaskPartialUpdate
 from app.db.models.tasks import Base
 
 
-async def list_model_data(model: type[Base], user: Base, db: AsyncSession) -> list[Base] | None:
+async def list_model_data(
+    model_class: type[Base], user: Base, db: AsyncSession
+) -> list[Base] | None:
     """
     Получение всех записей модели model из бд.
     Если select(model) ничего не вернет, то вернет пустой список.
     Эта ситуация обрабатывается, чтобы вернуть None для простой обработки ошибок.
     """
-    tasks = await db.scalars(select(model).where(model.user_id == user.id))
+    tasks = await db.scalars(
+        select(model_class).where(model_class.user_id == user.id)
+    )
     result = tasks.all()
     if not result:
         return None
     return result
 
 
-async def retrieve_model_data(model_id: int, model: type[Base], db: AsyncSession) -> Base | None:
+async def retrieve_model_data(
+    model_obj_id: int, model_class: type[Base], db: AsyncSession
+) -> Base | None:
     """
     Получение конкретной записи модели model из бд
     по id.
     Метод get у db вернет None, если ничего не будет найдено.
     """
-    result = await db.get(model, model_id)
+    result = await db.get(model_class, model_obj_id)
     return result
 
 
-async def create_model_and_commit(
-    model: type[Base], model_data: TaskCreateUpdate, user: Base, db: AsyncSession
-) -> Base | None:
+async def create_model_and_commit(model_obj, db: AsyncSession) -> Base | None:
     """
     Создание Объекта модели model и коммит в бд.
     """
-    model_data = model_data.model_dump()
-    new_model = model(**model_data)
-    new_model.user_id = user.id
     try:
         async with db.begin():
-            db.add(new_model)
+            db.add(model_obj)
     except IntegrityError:
         return "IntegrityError"
     except TypeError:
         return "TypeError"
     except InvalidRequestError:
         return "InvalidRequestError"
-    return new_model
+    return model_obj
 
 
 async def update_model_and_commit(
-    model: type[Base], model_id: int, new_data: TaskCreateUpdate, user: Base, db: AsyncSession
+    model_class: type[Base],
+    model_obj_id: int,
+    new_data: dict,
+    user: Base,
+    db: AsyncSession,
 ) -> Base | None:
     """
     Полное обновление объекта модели model и коммит в бд.
     """
-    new_data = new_data.model_dump()
     async with db.begin():
         try:
-            model_obj = await db.get(model, model_id)
+            model_obj = await db.get(model_class, model_obj_id)
             if model_obj is None:
                 return None
             # Главное не забывать, что если проходимся циклом,
@@ -77,7 +80,10 @@ async def update_model_and_commit(
 
 
 async def partial_update_and_commit(
-    model: type[Base], model_id: int, new_data: TaskPartialUpdate, db: AsyncSession
+    model_class: type[Base],
+    model_obj_id: int,
+    new_data: dict,
+    db: AsyncSession,
 ) -> Base | None:
     """
     Частичное обновление объекта модели model и коммит в бд.
@@ -85,7 +91,7 @@ async def partial_update_and_commit(
     new_data = new_data.model_dump()
     async with db.begin():
         try:
-            model_obj = await db.get(model, model_id)
+            model_obj = await db.get(model_class, model_obj_id)
             if model_obj is None:
                 return None
             for key, value in new_data.items():
@@ -101,12 +107,14 @@ async def partial_update_and_commit(
     return model_obj
 
 
-async def destroy_and_commit(model: type[Base], model_id: int, db: AsyncSession):
+async def destroy_and_commit(
+    model_class: type[Base], model_obj_id: int, db: AsyncSession
+):
     """
     Удаление записи переданной модели
     """
     async with db.begin():
-        model_obj = await db.get(model, model_id)
+        model_obj = await db.get(model_class, model_obj_id)
         if model_obj is None:
             return None
         try:

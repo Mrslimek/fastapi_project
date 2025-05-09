@@ -1,31 +1,27 @@
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from app.schemas.users import UserRegister
-from app.schemas.auth import Token
-from app.utils.auth import create_access_token
+from sqlalchemy import select
+from datetime import timedelta
+from app.utils.auth import create_token
 from app.db.models.users import User
+from app.db.database import Base
+from app import config
 
 
-async def register_user(user_data: UserRegister, db: AsyncSession):
-    user_data = user_data.model_dump()
+async def register_user(user_obj: Base, db: AsyncSession) -> Base:
     try:
-        # TODO: Рассмотреть вариант выноса этой логики в отдельную функцию
-        user_password = user_data.pop("password")
-        user = User(username=user_data["username"])
-        user.set_password(password=user_password)
         async with db.begin():
-            db.add(user)
+            db.add(user_obj)
     except IntegrityError:
         return "IntegrityError"
     except TypeError:
         return "TypeError"
     except InvalidRequestError:
         return "InvalidRequestError"
-    return user
+    return user_obj
 
 
-async def login_user(user_data, db: AsyncSession) -> Token | None | str:
+async def login_user(user_data, db: AsyncSession) -> dict | None | str:
     try:
         stmt = select(User).where(User.username == user_data.username)
         result = await db.execute(stmt)
@@ -34,9 +30,25 @@ async def login_user(user_data, db: AsyncSession) -> Token | None | str:
             return None
         else:
             jwt_data = {"sub": user.username}
-            access_token = create_access_token(jwt_data)
-            return Token(access_token=access_token, token_type="bearer")
-            return Token
+            access_token = create_token(
+                jwt_data=jwt_data,
+                expires_delta=timedelta(
+                    minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES
+                ),
+            )
+            refresh_token = create_token(
+                jwt_data=jwt_data,
+                expires_delta=timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS),
+            )
+            # TODO: Доделать создание эндпоинтов для аутентификации
+            # Это реализация функции, которая отдает access и refresh токены
+            # Надо сделать эндпоинт для обновления access по refresh
+            # и эндпоинт для логаута
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": "bearer",
+            }
     except IntegrityError:
         return "IntegrityError"
     except TypeError:

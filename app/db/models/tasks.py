@@ -16,7 +16,9 @@ class Task(Base):
     description: Mapped[str] = mapped_column(String, nullable=True)
     completion_status: Mapped[CompletionStatus] = mapped_column(
         SQLEnum(
-            CompletionStatus, name="completion_status", values_callable=get_enum_values
+            CompletionStatus,
+            name="completion_status",
+            values_callable=get_enum_values,
         ),
         default=CompletionStatus.NOT_COMPLETED,
         nullable=False,

@@ -1,4 +1,6 @@
 from fastapi import HTTPException
+from typing import Type
+from app.db.database import Base
 
 
 def handle_db_result(result):
@@ -20,3 +22,11 @@ def handle_db_result(result):
         detail, status_code = error_map[result]
         raise HTTPException(status_code=status_code, detail=detail)
     return result
+
+
+def create_model_instance(
+    model_class: Type[Base], model_data: dict, user_id: int
+):
+    model_obj = model_class(**model_data)
+    model_obj.user_id = user_id
+    return model_obj

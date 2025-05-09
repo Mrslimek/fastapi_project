@@ -6,8 +6,8 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.db.database import DATABASE_URL, Base
-from app.db.models.users import User #noqa
-from app.db.models.tasks import Task #noqa
+from app.db.models.users import User  # noqa
+from app.db.models.tasks import Task  # noqa
 
 config = context.config
 
@@ -58,7 +58,9 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
 
         with context.begin_transaction():
             context.run_migrations()
