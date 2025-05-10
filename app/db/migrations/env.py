@@ -8,6 +8,7 @@ from alembic import context
 from app.db.database import DATABASE_URL, Base
 from app.db.models.users import User  # noqa
 from app.db.models.tasks import Task  # noqa
+from app.db.models.auth import RevokedToken  # noqa
 
 config = context.config
 

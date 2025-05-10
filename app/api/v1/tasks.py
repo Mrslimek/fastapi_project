@@ -49,7 +49,9 @@ async def retrieve_tasks(
     """
     Получение записи модели Task по id
     """
-    result = await retrieve_model_data(model_obj_id=task_id, model_class=Task, db=db)
+    result = await retrieve_model_data(
+        model_obj_id=task_id, model_class=Task, db=db
+    )
     if result is None:
         raise HTTPException(
             status_code=404, detail="По вашему запросу ничего не найдено"
@@ -91,7 +93,7 @@ async def update_task(
     """
     result = await update_model_and_commit(
         model_class=Task,
-        model__obj_id=task_id,
+        model_obj_id=task_id,
         new_data=new_data.model_dump(),
         user=user,
         db=db,
